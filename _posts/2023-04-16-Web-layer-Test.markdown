@@ -2,7 +2,7 @@
 layout: post
 title: Spring test(web layer)
 date: 2023-04-17 01:29:08 +0900
-# last_modified_at: 2023-04-18 12:40:00 +0900
+categories: [java, spring framework]
 tags: [spring, test]
 toc: true
 ---
