@@ -1,0 +1,253 @@
+# 문서 자동생성 도구
+## 1. Swagger(OpenAPI 3.0, Springdoc)
+controller 등 로직에 annotation 기반으로 api를 표현
+> swagger: https://www.baeldung.com/swagger-2-documentation-for-spring-rest-api <br>
+
+Documenting a Spring REST API Using OpenAPI 3.0
+> springdoc: https://www.baeldung.com/spring-rest-openapi-documentation <br>
+> springdoc 공식문서: https://springdoc.org/ <br>
+
+***
+#### OpenAPI vs Swagger vs Springfox
+- OpenAPI: RESTful API를 정의하는 spec
+- Swagger: OpenAPI 스펙을 따라 문서화 하는 도구
+- Springfox: Swagger의 java, spring 기반 구현체 라이브러리(springfox github 들어가보면 2020년이 마지막 update)
+
+**spring boot 3.0.x 부터는 springfox를 사용할 수 없다. springfox는 springdoc으로 migration 됐다**
+> springfox github issue: https://github.com/springfox/springfox/issues/3983 <br>
+
+- springfox 3.0이 있지만 이는 openapi 3.0을 지원, spring boot 3.0.x를 지원하지는 않음
+
+***
+### 적용 - swagger
+#### build.gradle
+```groovy
+dependencies {
+    ...
+    //springdoc
+    implementation 'org.springdoc:springdoc-openapi-ui:1.7.0'
+    ...
+}
+```
+
+#### application.yml
+```yml
+springdoc:
+  swagger-ui:
+    path: /api/docs/v1/swagger-ui
+
+  default-produces-media-type: application/json;charset=UTF-8
+  default-consumes-media-type: application/json;charset=UTF-8
+```
+
+***
+### API docs 작성 코드 - swagger
+#### controller
+```java
+@RestController
+public class TestController {
+
+	@Operation(summary = "test get API")
+	@GetMapping("/test/api/get/{id}")
+	public MessageBodyDTO get(
+		@Parameter(name = "id") @PathVariable Long id,
+		@Parameter(name = "queryString") @RequestParam String queryString) {
+		return MessageBodyDTO.builder()
+			.id(id)
+			.description("id: " + id + " / queryString: " + queryString)
+			.build();
+	}
+
+	@Operation(summary = "test put API")
+	@PutMapping("/test/api/put/{id}")
+	public Long put(
+		@Parameter(name = "id") @PathVariable Long id,
+		@Parameter(name = "messageBody") @RequestBody MessageBodyDTO messageBody) {
+		return id;
+	}
+}
+```
+
+#### dto
+```java
+@ToString
+@Getter
+@Builder
+@AllArgsConstructor
+public class MessageBodyDTO {
+	@Schema(description = "id", type = "NUMBER")
+	private Long id;
+	@Schema(description = "description", type = "STRING")
+	private String description;
+}
+```
+
+***
+## 2. Spring rest docs
+- test code를 기반으로 api를 정리
+    - mock test와 integration test 모두 적용 가능
+- asciidoc을 기반으로 html 생성
+
+***
+### 적용 - spring rest docs
+#### build.gradle
+```groovy
+plugins {
+    ...
+    id 'org.asciidoctor.jvm.convert' version '3.3.2' //version이 달라질 수 있음
+    ...
+}
+
+ext {
+    set('snippetsDir', file("build/generated-snippets"))
+}
+
+dependencies {
+    ...
+    testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc' //mock test로 문서를 작성할 때
+    ...
+}
+
+test {
+    outputs.dir snippetsDir
+    useJUnitPlatform()
+}
+
+asciidoctor {
+    dependsOn test
+    inputs.dir snippetsDir
+}
+
+build {
+    dependsOn asciidoctor
+}
+
+//(Optional)build 시 resources/static/docs 경로로 html 파일 복사
+build.doLast {
+    copy {
+        from asciidoctor.outputDir
+        into 'src/main/resources/static/docs'
+    }
+}
+
+//(Optional)clean 시 resources/static/docs 경로로 html 파일 삭제
+task apiDocsClean(type: Delete) {
+    delete file('src/main/resources/static/docs')
+}
+clean.dependsOn apiDocsClean
+```
+
+***
+### API docs 작성 코드 - spring rest docs
+#### controller test code
+```java
+@WebMvcTest(controllers = TestController.class)
+@AutoConfigureRestDocs
+class TestControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    private OperationResponsePreprocessor getDocumentResponse() {
+        return preprocessResponse(prettyPrint());
+    }
+
+    private OperationRequestPreprocessor getDocumentRequest() {
+        return preprocessRequest(
+                modifyUris()
+                        .scheme("https")
+                        .host("docs.api.com")
+                        .removePort(),
+                prettyPrint());
+    }
+
+    @Test
+    void 조회() throws Exception {
+        final Long id = 1L;
+        final String queryString = "queryString";
+        final MessageBodyDTO expectedResponseBody = MessageBodyDTO.builder()
+                .id(id)
+                .description("id: " + id + " / queryString: " + queryString)
+                .build();
+
+        this.mockMvc
+                .perform(get("/api/get/{id}", id.toString())
+                        .param("queryString", queryString))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(objectMapper.writeValueAsString(expectedResponseBody)))
+                .andDo(document("조회", getDocumentRequest(), getDocumentResponse(),
+                        pathParameters(parameterWithName("id").description("아이디")),
+                        queryParameters(parameterWithName("queryString").description("queryString")),
+                        responseFields(
+                                fieldWithPath("id").type(JsonFieldType.NUMBER).description("id"),
+                                fieldWithPath("description").type(JsonFieldType.STRING).description("id + description")
+                        )
+                ));
+    }
+
+    @Test
+    void putTest() throws Exception {
+        final Long id = 1L;
+        final String queryString = "queryString";
+        final MessageBodyDTO requestBody = MessageBodyDTO.builder()
+                .id(id)
+                .description("id: " + id + " / queryString: " + queryString)
+                .build();
+
+        this.mockMvc
+                .perform(put("/api/post/{id}", id.toString())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestBody)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(id.toString()))
+                .andDo(document("put", getDocumentRequest(), getDocumentResponse(),
+                        pathParameters(parameterWithName("id").description("아이디")),
+                        requestFields(
+                                fieldWithPath("id").type(JsonFieldType.NUMBER).description("id"),
+                                fieldWithPath("description").type(JsonFieldType.STRING).description("id + description")
+                        )
+                ));
+    }
+}
+```
+
+#### asciidoc
+```asciidoc
+= Spring REST Docs
+:toc: left
+:toclevels: 2
+:sectlinks:
+
+ifndef::snippets[]
+:snippets: ./build/generated-snippets
+endif::[]
+
+[[resources-get]]
+== GET
+
+[[resources-get-test]]
+=== GET
+
+==== HTTP request
+
+include::{snippets}/조회/http-request.adoc[]
+
+==== HTTP response
+
+include::{snippets}/조회/http-response.adoc[]
+
+[[resources-post]]
+== POST
+
+include::{snippets}/put/http-request.adoc[]
+
+[[resources-post-test]]
+=== POST
+
+include::{snippets}/조회/http-response.adoc[]
+```
+
+***
