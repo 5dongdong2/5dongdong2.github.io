@@ -39,7 +39,7 @@ public class SmokeTest {
 }
 ```
 ### restTemplate를 이용한 test
-spring boot가 restTemplate를 injection
+spring boot가 TestRestTemplate를 injection
 
 ```java
 import org.junit.jupiter.api.Test;
@@ -102,7 +102,7 @@ public class TestingWebApplicationTest {
 	}
 }
 ```
-`@SpringBootTest + @AutoConfigureMockMvc`는 DI가 있다면 관련된 모든 instance들을 모두 생성
+`@SpringBootTest + @AutoConfigureMockMvc`는 의존관계가 있다면 관련된 모든 instance들을 모두 생성
 > In this test, the full Spring application context is started but without the server
 
 ***
