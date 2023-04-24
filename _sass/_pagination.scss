@@ -1,52 +1,124 @@
-// Pagination
-//
-// Super lightweight (HTML-wise) blog pagination. `span`s are provide for when
-// there are no more previous or next posts to show.
-
-.pagination {
-  margin: 0 -1.5rem;
-  color: var(--gray-500);
-  text-align: center;
+.Pagination {
+    margin-top: 50px;
+    margin-bottom: 10px;
+    text-align: center;
 }
 
-// Pagination items can be `span`s or `a`s
-.pagination-item {
-  display: block;
-  padding: var(--spacer);
-  text-decoration: none;
-  border: solid var(--border-color);
-  border-width: 1px 0;
-
-  &:first-child {
-    margin-bottom: -1px;
-  }
+.Pagination-inner {
+    align-items: center;
+    display: inline-flex;
+    font-size: 18px;
+    height: 30px;
+    line-height: 10px;
 }
 
-// Only provide a hover state for linked pagination items
-a.pagination-item:hover {
-  background-color: var(--border-color);
-}
+.Pagination-link {
+    align-items: center;
+    border-radius: 50%;
+    color: $pagination-color;
+    display: flex;
+    height: 100%;
+    justify-content: center;
+    text-decoration: none;
+    transition: color $time;
+    width: 30px;
 
-@media (min-width: $sm-width) {
-  .pagination {
-    margin: var(--spacer-3) 0;
-    height: calc(var(--body-font-size) * var(--body-line-height) + var(--spacer) * 2);
-  }
-
-  .pagination-item {
-    float: left;
-    width: 50%;
-    border-width: 1px;
-
-    &:first-child {
-      margin-bottom: 0;
-      border-top-left-radius: var(--border-radius);
-      border-bottom-left-radius: var(--border-radius);
+    &:hover {
+	color: $pagination-hover-color;
     }
-    &:last-child {
-      margin-left: -1px;
-      border-top-right-radius: var(--border-radius);
-      border-bottom-right-radius: var(--border-radius);
+
+    @include mobile {
+	display: none;
     }
-  }
+}
+
+.Pagination-link--arrow {
+    display: flex;
+}
+
+.Pagination-link--inactive,
+.Pagination-link--inactive:hover {
+    background: transparent;
+    color: $pagination-color;
+    opacity: 0.3;
+}
+
+.Pagination-link--active,
+.Pagination-link--active:hover {
+    background: $pagination-active-bg;
+    color: $pagination-active-color;
+    font-weight: bold;
+    margin: 0 03px;
+
+    @include mobile {
+	display: flex;
+	margin: 0 10px;
+    }
+}
+
+.Pagination-separator {
+    margin: 0 12px;
+    position: relative;
+}
+
+.Pagination-separator,
+.Pagination-separator::before,
+.Pagination-separator::after {
+    background: $pagination-separator-color;
+    border-radius: 50%;
+    content: '';
+    display: block;
+    height: 03px;
+    width: 03px;
+
+    @include mobile {
+	display: none;
+    }
+}
+
+.Pagination-separator::before {
+    position: absolute;
+    top: 0;
+    transform: translateX(-6px);
+}
+
+.Pagination-separator::after {
+    position: absolute;
+    top: 0;
+    transform: translateX(6px);
+}
+
+.Pagination-arrow {
+    width: 12px;
+}
+
+.Pagination-arrow::before,
+.Pagination-arrow::after {
+    background: $pagination-color;
+    content: '';
+    display: block;
+    height: 15px;
+    transition: background $time;
+    width: 02px;
+}
+
+.Pagination-arrow::before {
+    transform: rotateZ(40deg);
+    transform-origin: bottom left;
+}
+
+.Pagination-arrow::after {
+    transform: rotateZ(-40deg);
+    transform-origin: top left;
+}
+
+.Pagination-arrow--right {
+    transform: rotateZ(180deg);
+}
+
+.Pagination-link:hover {
+    .Pagination-arrow::before,
+    .Pagination-arrow::after {
+	background: $pagination-hover-color;
+    }
 }
