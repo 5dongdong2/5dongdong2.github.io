@@ -1,10 +1,9 @@
 ---
 layout: post
-title: Spring test(web layer)
-date: 2023-04-17 01:29:08 +0900
-categories: [java, spring framework]
-tags: [spring, test]
-toc: true
+title: Spring Test(web layer)
+date: 2023-04-16
+categories: [spring, test]
+tags: [java, spring framework, mock]
 ---
 # Controller Test
 controller test settings

@@ -1,3 +1,10 @@
+---
+layout: post
+title: Integration Test(spring, rest-assured, karate)
+date: 2023-04-17
+categories: [spring, test]
+tags: [java, spring framework, rest assured, karate]
+---
 ## Spring
 - spring에서 지원하는 TestRestTemplate을 사용
 
@@ -154,7 +161,7 @@ public class IntegrationTestControllerRunner {
 }
 ```
 
-```feature
+```karate
 Feature: post_get_put_delete
 
   Scenario:
