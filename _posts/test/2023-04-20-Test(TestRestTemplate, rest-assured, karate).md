@@ -161,7 +161,7 @@ public class IntegrationTestControllerRunner {
 }
 ```
 
-```karate
+```cucumber
 Feature: post_get_put_delete
 
   Scenario:
