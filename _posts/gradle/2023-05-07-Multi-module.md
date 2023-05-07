@@ -86,7 +86,8 @@ project(':module2') {}
 ## module project
 module1(web), module2(integration-test), common 3개의 module로 구성
 
-[![multi-module](./multi-module.png)](./multi-module.png){:.glightbox}
+![placeholder](./multi-module.png "Large example image")
+![placeholder](./multi-module.png)
 
 ***
 ### module1
