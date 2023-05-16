@@ -87,7 +87,6 @@ project(':module2') {}
 module1(web), module2(integration-test), common 3개의 module로 구성
 
 ![placeholder](./multi-module.png "Large example image")
-![placeholder](./multi-module.png)
 
 ***
 ### module1
