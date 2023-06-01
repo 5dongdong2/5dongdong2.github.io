@@ -47,6 +47,48 @@ tags: [java, effective]
 1. 이름을 가질 수 있다.
    - 생성자는 모두 이름이 같다! 매개변수와 생성자 자체만으로는 반환될 객체의 특성을 제대로 설명할 수 없다.
    - 매개변수의 순서와 타입이 같아도 이름을 다르게 할 수 있다. -> 이런 상황이 필요하면 사용!
+   - 다음과 같은 컴파일 에러나는 상황에 사용 가능
+```java
+public class Order {
+    private boolean prime;
+    private boolean urgent;
+    private String productName;
+
+    public Order(boolean prime, String productName) {
+        this.prime = prime;
+        this.urgent = urgent;
+        this.productName = productName;
+    }
+
+    public Order(boolean urgent, String productName) {
+        this.prime = prime;
+        this.urgent = urgent;
+        this.productName = productName;
+    }
+}
+```
+   - 생성자 대신 정적 팩토리 메소드 사용
+```java
+public class Order {
+    private boolean prime;
+    private boolean urgent;
+    private String productName;
+
+    public static Order primeOrder(String productName) {
+        Order order = new Order();
+        order.prime = true;
+        order.productName = productName;
+        return order;
+    }
+
+    public static Order urgentOrder(String productName) {
+        Order order = new Order();
+        order.urgent = true;
+        order.productName = productName;
+        return order;
+    }
+}
+```
 2. 호출될 떄마다 인스턴스를 새로 생성하지 않아도 된다.(선택)
    - 불변 클래스(immutable class)는 인스턴스를 미리 생성할 수 있다.
    - 새로 생성한 인스턴스를 캐싱하여 재활용할 수 있다.
@@ -55,14 +97,100 @@ tags: [java, effective]
    - 언제 어느 인스턴스를 살아 있게 할지를 통제할 수 있다.
      - 싱글톤 가능
      - 인스턴스화 불가(noninstantiable)
+```java
+public class Settings {
+
+    private boolean useAuto;
+    private boolean useTest;
+    private String name;
+
+    private Settings() {}
+
+    private static final Settings SETTINGS = new Settings();
+
+    public static Settings getInstance() {
+        return SETTINGS;
+    }
+}
+
+class SettingsTest {
+
+    @Test
+    void settingsTEst() {
+        Settings instance1 = Settings.getInstance();
+        Settings instance2 = Settings.getInstance();
+
+        assertEquals(instance1, instance2); //test 성공
+    }
+}
+```
 3. 반환 타입의 하위 타입 객체를 반환할 수 있다.
    - 반환할 객체의 클래스를 선택할 수 있게 하는 유연성 제공
    - 구현 클래스를 공개하지 않고 반환 가능하기 때문에 API를 작게 유지
+```java
+public interface HelloService {
+
+    String hello();
+
+    //java 8부터 interface에 static 가능
+    static HelloService of(String lang) {
+        if (lang.equals("ko")) {
+            return new KoreanHelloService();
+        } else {
+            return new EnglishHelloService();
+        }
+    }
+}
+
+public class HelloServiceFactory {
+    //java 7까지는 interface 내에 static 불가
+    public static HelloService of(String lang) {
+        if (lang.equals("ko")) {
+            return new KoreanHelloService();
+        } else {
+            return new EnglishHelloService();
+        }
+    }
+}
+
+class HelloServiceTest {
+
+    @Test
+    void helloServiceTest() {
+        //java 8부터
+        HelloService ko = HelloService.of("ko");
+
+        assertTrue(ko instanceof KoreanHelloService);
+    }
+
+    @Test
+    void helloServiceFactoryTest() {
+        //java 7까지
+        HelloService ko = HelloServiceFactory.of("ko");
+
+        assertTrue(ko instanceof KoreanHelloService);
+    }
+}
+```
 4. 입력 매개변수에 따라 매번 다른 클래스의 객체 반환 가능
    - 반환 타입의 하위 타입이기만 하면 어떤 클래스의 객체를 반환하든 무관
    - 다음 릴리즈 때 객체가 변경돼도 무관
 5. 정적 팩토리 메서드를 작성하는 시점에는 반환할 객체의 클래스가 존재하지 않아도 됨
    - 이런 유연함은 서비스 제공자 프레임워크(service provider framework)를 만드는 근간
+```java
+class HelloServiceTest {
+
+    @Test
+    void helloServiceServiceLoaderTest() {
+        //helloService 구현체가 없어도  동작함
+        ServiceLoader<HelloService> loader = ServiceLoader.load(HelloService.class);
+        Optional<HelloService> helloServiceOptional = loader.findFirst();
+        helloServiceOptional.ifPresent(helloService -> {
+            System.out.println(helloService.hello());
+        });
+    }
+}
+```
 
 ### service provider framework
 - JDBC(Java Database Connectivity)가 대표적
