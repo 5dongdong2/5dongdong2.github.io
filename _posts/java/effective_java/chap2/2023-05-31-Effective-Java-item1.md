@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Effective Java item1
-date: 2023-06-03
+date: 2023-05-31
 categories: [java, effective]
 tags: [java, effective]
 ---
